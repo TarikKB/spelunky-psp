@@ -1,12 +1,9 @@
 FROM ubuntu:20.04
 
-# Docker image with toolchains/dependencies for the following platforms:
-#   * Linux
-#   * PSP
-#   * Android
-#
-# TODO: Split this Dockerfile into 3 separate ones, as handling that much platforms
-#       is too much competence and the final image grows larger.
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PSPDEV=/usr/local/pspdev
+ENV PSPSDK=${PSPDEV}/psp/sdk
+ENV PATH=${PATH}:${PSPDEV}/bin:${PSPSDK}/bin
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -44,17 +41,10 @@ RUN apt-get update && \
         libssl-dev \
     && apt-get clean
 
-RUN git clone https://github.com/pspdev/psptoolchain.git --depth 1
+WORKDIR /tmp
+RUN git clone --depth 1 https://github.com/pspdev/psptoolchain.git
 
-WORKDIR /psptoolchain
-RUN ls -la
-RUN find . -maxdepth 2 -type f | sort
+WORKDIR /tmp/psptoolchain
+RUN ./toolchain.sh
 
-# Set environment variables
-RUN export PSPDEV=/usr/local/pspdev
-RUN export PATH=$PATH:$PSPDEV/bin
-ENV PSPDEV /usr/local/pspdev
-ENV PATH $PATH:$PSPDEV/bin
-
-# own requirements
-RUN apt-get install libglew-dev -y
+WORKDIR /work

@@ -54,6 +54,17 @@ MainDudeBaseState* MainDudeJumpingState::update(MainDudeComponent& dude, uint32_
     auto& item_carrier = registry.get<ItemCarrierComponent>(owner);
     auto& orientation = registry.get<HorizontalOrientationComponent>(owner);
 
+    if (input.jumping().value() && physics.get_y_velocity() < 0.0f)
+    {
+        physics.add_velocity(0.0f, -0.005f);  // Adjust magnitude as needed
+    }
+
+    // Apply air resistance when no directional input is held
+    if (!input.left().value() && !input.right().value())
+    {
+        physics.set_x_velocity(physics.get_x_velocity() * 0.8f);  // Gradually decelerate to ~95% each frame
+    }
+
     if (input.left().value() && dude.hang_off_cliff_left(physics, position))
     {
         return &dude._states.cliff_hanging;

@@ -46,14 +46,14 @@ void Input::poll()
     _toggles.left.feed(pad.Buttons & PSP_CTRL_LEFT);
     _toggles.right.feed(pad.Buttons & PSP_CTRL_RIGHT);
     _toggles.jumping.feed(pad.Buttons & PSP_CTRL_CROSS);
-    _toggles.ducking.feed(pad.Buttons & PSP_CTRL_CIRCLE);
+    _toggles.ducking.feed(pad.Buttons & PSP_CTRL_DOWN);
     _toggles.death_requested.feed(pad.Buttons & PSP_CTRL_LTRIGGER);
     _toggles.quit_requested.feed(pad.Buttons & PSP_CTRL_RTRIGGER);
-    _toggles.running_fast.feed(pad.Buttons & PSP_CTRL_LTRIGGER);
-    _toggles.throwing.feed(pad.Buttons & PSP_CTRL_RTRIGGER);
+    _toggles.running_fast.feed(pad.Buttons & PSP_CTRL_RTRIGGER);
+    _toggles.throwing.feed(pad.Buttons & PSP_CTRL_SQUARE);
     _toggles.paused.feed(pad.Buttons & PSP_CTRL_SELECT);
-    _toggles.out_bomb.feed(pad.Buttons & PSP_CTRL_TRIANGLE);
-    _toggles.out_rope.feed(pad.Buttons & PSP_CTRL_SQUARE);
+    _toggles.out_bomb.feed(pad.Buttons & PSP_CTRL_CIRCLE);
+    _toggles.out_rope.feed(pad.Buttons & PSP_CTRL_TRIANGLE);
     _toggles.purchase.feed(pad.Buttons & PSP_CTRL_START);
 
     fill_input_events();

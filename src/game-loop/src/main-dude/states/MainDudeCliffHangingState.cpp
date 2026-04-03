@@ -6,39 +6,39 @@
 #include "Input.hpp"
 #include "EntityRegistry.hpp"
 
-void MainDudeCliffHangingState::enter(MainDudeComponent& dude)
+void MainDudeCliffHangingState::enter(MainDudeComponent &dude)
 {
-    auto& registry = EntityRegistry::instance().get_registry();
-    const auto& owner = dude._owner;
+    auto &registry = EntityRegistry::instance().get_registry();
+    const auto &owner = dude._owner;
 
-    auto& physics = registry.get<PhysicsComponent>(owner);
-    auto& quad = registry.get<QuadComponent>(owner);
-    auto& input = registry.get<InputComponent>(owner);
+    auto &physics = registry.get<PhysicsComponent>(owner);
+    auto &quad = registry.get<QuadComponent>(owner);
+    auto &input = registry.get<InputComponent>(owner);
 
     physics.set_x_velocity(0.0f);
     physics.set_y_velocity(0.0f);
     physics.disable_gravity();
 
     input.allowed_events = {
-            InputEvent::JUMPING,
-            InputEvent::JUMPING_PRESSED,
-            InputEvent::THROWING,
-            InputEvent::THROWING_PRESSED,
-            InputEvent::OUT_BOMB,
-            InputEvent::OUT_BOMB_PRESSED,
-            InputEvent::OUT_ROPE,
-            InputEvent::OUT_ROPE_PRESSED,
+        InputEvent::JUMPING,
+        InputEvent::JUMPING_PRESSED,
+        InputEvent::THROWING,
+        InputEvent::THROWING_PRESSED,
+        InputEvent::OUT_BOMB,
+        InputEvent::OUT_BOMB_PRESSED,
+        InputEvent::OUT_ROPE,
+        InputEvent::OUT_ROPE_PRESSED,
     };
 
     quad.frame_changed(MainDudeSpritesheetFrames::HANGING_LEFT);
 }
 
-MainDudeBaseState* MainDudeCliffHangingState::update(MainDudeComponent& dude, uint32_t delta_time_ms)
+MainDudeBaseState *MainDudeCliffHangingState::update(MainDudeComponent &dude, uint32_t delta_time_ms)
 {
-    auto& registry = EntityRegistry::instance().get_registry();
-    const auto& owner = dude._owner;
+    auto &registry = EntityRegistry::instance().get_registry();
+    const auto &owner = dude._owner;
 
-    const auto& input = Input::instance();
+    const auto &input = Input::instance();
 
     if (input.jumping().changed() && input.jumping().value())
     {
@@ -48,9 +48,9 @@ MainDudeBaseState* MainDudeCliffHangingState::update(MainDudeComponent& dude, ui
 
         float offset = 1.0f / 16.0f;
 
-        auto& physics = registry.get<PhysicsComponent>(owner);
-        auto& position = registry.get<PositionComponent>(owner);
-        auto& orientation = registry.get<HorizontalOrientationComponent>(owner);
+        auto &physics = registry.get<PhysicsComponent>(owner);
+        auto &position = registry.get<PositionComponent>(owner);
+        auto &orientation = registry.get<HorizontalOrientationComponent>(owner);
 
         if (orientation.orientation == HorizontalOrientation::LEFT)
         {
@@ -61,8 +61,14 @@ MainDudeBaseState* MainDudeCliffHangingState::update(MainDudeComponent& dude, ui
             position.x_center -= offset;
         }
 
+        float jump_speed = MainDudeComponent::JUMP_SPEED;
+        if (input.ducking().value() || input.down().value()) // or input.down() depending on your API
+        {
+            jump_speed = MainDudeComponent::JUMP_SPEED * 0.5f; // Adjust the 0.5 factor as needed
+        }
+
         // FIXME: InputSystem checks for bottom collision which is not true in this case
-        physics.set_y_velocity(-MainDudeComponent::JUMP_SPEED);
+        physics.set_y_velocity(-jump_speed);
         physics.enable_gravity();
 
         return &dude._states.jumping;
@@ -71,11 +77,11 @@ MainDudeBaseState* MainDudeCliffHangingState::update(MainDudeComponent& dude, ui
     return this;
 }
 
-void MainDudeCliffHangingState::exit(MainDudeComponent& dude)
+void MainDudeCliffHangingState::exit(MainDudeComponent &dude)
 {
-    auto& registry = EntityRegistry::instance().get_registry();
-    const auto& owner = dude._owner;
+    auto &registry = EntityRegistry::instance().get_registry();
+    const auto &owner = dude._owner;
 
-    auto& physics = registry.get<PhysicsComponent>(owner);
+    auto &physics = registry.get<PhysicsComponent>(owner);
     physics.enable_gravity();
 }

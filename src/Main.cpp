@@ -11,6 +11,45 @@
 
 #include <cstdlib>
 
+#if defined(SPELUNKY_PSP_PLATFORM_PSP)
+#include <pspkernel.h>
+#include <pspthreadman.h>
+
+static int exit_callback(int, int, void*)
+{
+    sceKernelExitGame();
+    return 0;
+}
+
+static int callback_thread(SceSize, void*)
+{
+    int cbid = sceKernelCreateCallback("Exit Callback", exit_callback, nullptr);
+    if (cbid >= 0)
+    {
+        sceKernelRegisterExitCallback(cbid);
+    }
+
+    sceKernelSleepThreadCB();
+    return 0;
+}
+
+static void setup_psp_callbacks()
+{
+    int thid = sceKernelCreateThread(
+        "psp_callback_thread",
+        callback_thread,
+        0x11,
+        0xFA0,
+        0,
+        0);
+
+    if (thid >= 0)
+    {
+        sceKernelStartThread(thid, 0, nullptr);
+    }
+}
+#endif
+
 void init_singletons()
 {
     Assets::init();
@@ -35,6 +74,10 @@ void dispose_singletons()
 
 int start()
 {
+#if defined(SPELUNKY_PSP_PLATFORM_PSP)
+    setup_psp_callbacks();
+#endif
+
     log_info("Started.");
     init_singletons();
 
@@ -77,6 +120,8 @@ int start()
 extern "C"
 {
 int SDL_main(int argc, char *argv[]) {
+    (void)argc;
+    (void)argv;
     return start();
 }
 }

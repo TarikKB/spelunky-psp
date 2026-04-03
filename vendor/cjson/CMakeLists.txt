@@ -1,6 +1,5 @@
 set(CMAKE_LEGACY_CYGWIN_WIN32 0)
-cmake_minimum_required(VERSION 2.8.5)
-
+cmake_minimum_required(VERSION 3.10...3.31 FATAL_ERROR)
 project(cJSON C)
 
 include(GNUInstallDirs)

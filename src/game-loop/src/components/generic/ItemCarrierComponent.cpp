@@ -1,6 +1,7 @@
 #include "components/generic/ItemCarrierComponent.hpp"
 #include "components/generic/SaleableComponent.hpp"
 #include "components/damage/GiveProjectileDamageComponent.hpp"
+#include "Input.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -11,6 +12,11 @@ ItemComponent &ItemCarrierComponent::get_active_item() const
     assert(has_active_item());
     auto& registry = EntityRegistry::instance().get_registry();
     return registry.get<ItemComponent>(_slots.active_item);
+}
+
+entt::entity ItemCarrierComponent::get_active_item_entity() const
+{
+    return _slots.active_item;
 }
 
 bool ItemCarrierComponent::has_active_item() const
@@ -65,6 +71,18 @@ void ItemCarrierComponent::pick_up_item(entt::entity item, entt::entity carrier)
     recalculate_modifiers();
 }
 
+HorizontalOrientation ItemCarrierComponent::get_carrier_orientation(entt::entity carrier_entity) const
+{
+    auto& registry = EntityRegistry::instance().get_registry();
+    
+    if (!registry.has<HorizontalOrientationComponent>(carrier_entity))
+    {
+        return HorizontalOrientation::RIGHT;  // Default fallback
+    }
+    
+    return registry.get<HorizontalOrientationComponent>(carrier_entity).orientation;
+}
+
 void ItemCarrierComponent::put_down_active_item()
 {
     if (!has_active_item())
@@ -83,8 +101,22 @@ void ItemCarrierComponent::put_down_active_item()
         projectile_damage_component.set_last_throw_source(item.get_item_carrier_entity());
     }
 
+    // Get carrier orientation BEFORE resetting carrier
+    auto carrier_entity = item.get_item_carrier_entity();
+    auto carrier_orientation = get_carrier_orientation(carrier_entity);
+    
     item.reset_carrier();
     physics.enable_gravity();
+    
+    // Add a small horizontal velocity boost to dropped items in the direction carrier is facing
+    float dropped_vel;
+    switch (carrier_orientation)
+    {
+        case HorizontalOrientation::LEFT: dropped_vel = -0.05f; break;
+        case HorizontalOrientation::RIGHT: dropped_vel = 0.05f; break;
+        default: assert(false);
+    }
+    physics.add_velocity(dropped_vel, 0.0f);
 
     notify({_slots.active_item, ItemCarrierEvent::EventType::REMOVED, item.get_type()});
     _slots.active_item = entt::null;
@@ -109,10 +141,23 @@ void ItemCarrierComponent::throw_active_item(HorizontalOrientationComponent carr
 
     item.reset_carrier();
     physics.enable_gravity();
-    physics.set_y_velocity(-0.085);
+    
+    // Check if player is looking up for trajectory adjustment
+    const auto& input = Input::instance();
+    float throw_y_velocity = -0.09f;
+    float throw_x_multiplier = 1.0f;
+    
+    if (input.up().value() && item.get_application() != ItemApplication::OPENABLE)
+    {
+        // Throw upward - more vertical, less horizontal
+        throw_y_velocity = -0.3f;  // Greater upward velocity
+        throw_x_multiplier = 0.9f;  // Reduced horizontal velocity
+    }
+    
+    physics.set_y_velocity(throw_y_velocity);
 
-    const float base_x_velocity = 0.5f + _modifiers.additional_throw_x_velocity;
-    const float velocity = (base_x_velocity / item.get_weight_kilos()) + std::fabs(carrier_physics.get_x_velocity());
+    const float base_x_velocity = (0.5f + _modifiers.additional_throw_x_velocity) * throw_x_multiplier;
+    const float velocity = (base_x_velocity / item.get_weight_kilos()) + (std::fabs(carrier_physics.get_x_velocity()) * throw_x_multiplier);
 
     switch (carrier_orientation.orientation)
     {

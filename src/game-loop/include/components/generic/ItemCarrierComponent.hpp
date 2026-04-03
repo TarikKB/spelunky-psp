@@ -48,6 +48,8 @@ public:
     bool has_passive_item_back() const;
 
     ItemComponent& get_active_item() const;
+    entt::entity get_active_item_entity() const;
+    HorizontalOrientation get_carrier_orientation(entt::entity carrier_entity) const;
 
     void update_carried_items_positions(PositionComponent& position);
     void update_carried_items_orientation(HorizontalOrientationComponent& orientation);

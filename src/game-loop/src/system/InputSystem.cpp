@@ -16,14 +16,14 @@
 
 namespace
 {
-    constexpr float DEFAULT_DELTA_X = 0.01f;
-    constexpr float DEFAULT_MAX_X_VELOCITY = 0.050f;
+    constexpr float DEFAULT_DELTA_X = 0.035f;
+    constexpr float DEFAULT_MAX_X_VELOCITY = 0.15f;
     constexpr float DEFAULT_MAX_Y_VELOCITY = 0.39f;
-    constexpr float MAX_RUNNING_VELOCITY_X = 0.15f;
+    constexpr float MAX_RUNNING_VELOCITY_X = 0.050f;
     constexpr float MAX_CRAWLING_VELOCITY_X = 0.008f;
     constexpr float CRAWLING_DELTA_X = 0.008f;
     constexpr float CLIMBING_VELOCITY_Y = 0.025f;
-    constexpr float JUMP_SPEED = 0.165f;
+    constexpr float JUMP_SPEED = 0.12f;
 
     bool is_end_of_ladder(MapTile *tile)
     {
@@ -235,11 +235,28 @@ void InputSystem::update_items_pick_up_put_down()
         {
             auto& item = carrier.get_active_item();
 
-            if (!open_intent && throw_intent && item.get_application() != ItemApplication::ACTIVABLE)
+            if (throw_intent && item.get_application() == ItemApplication::OPENABLE)
+            {
+                // Open openable items instead of throwing them
+                auto active_item_entity = carrier.get_active_item_entity();
+                if (registry.has<OpenableComponent>(active_item_entity))
+                {
+                    auto& openable = registry.get<OpenableComponent>(active_item_entity);
+                    openable.opened = true;
+                    openable.who_opened = carrier_entity;
+                    consume(InputEvent::THROWING_PRESSED);
+                    Audio::instance().play(SFXType::THROW);  // You might want a different sound for opening
+                }
+            }
+            else if (throw_intent && item.get_application() != ItemApplication::ACTIVABLE)
             {
                 carrier.throw_active_item(carrier_orientation, carrier_physics);
                 consume(InputEvent::THROWING_PRESSED);
                 Audio::instance().play(SFXType::THROW);
+            }
+            else if (open_intent)
+            {
+                // Handle other open intents here if needed
             }
         }
     });

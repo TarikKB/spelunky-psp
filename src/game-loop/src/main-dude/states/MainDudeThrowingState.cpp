@@ -25,6 +25,8 @@ void MainDudeThrowingState::enter(MainDudeComponent& dude)
             InputEvent::RIGHT_PRESSED,
             InputEvent::RUNNING_FAST,
             InputEvent::RUNNING_FAST_PRESSED,
+            InputEvent::UP,
+            InputEvent::UP_PRESSED,
     };
 
     Audio::instance().play(SFXType::MAIN_DUDE_WHIP);

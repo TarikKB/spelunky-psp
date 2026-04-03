@@ -50,7 +50,7 @@ public:
     void set_bounciness(float bounciness) { _properties.bounciness = bounciness; }
     void set_friction(float friction) { _properties.friction = friction; }
 
-    static float get_default_friction() { return 0.005f; }
+    static float get_default_friction() { return 0.02f; }
     static float get_default_max_x_velocity() { return 0.35f; }
     static float get_default_max_y_velocity() { return 0.39f; }
 
